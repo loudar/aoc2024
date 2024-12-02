@@ -12,9 +12,9 @@ function run() {
     const counts = new Map<number, number>();
 
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].split("   ").map(i => parseInt(i));
-        list.push(line[0]);
-        counts.set(line[1], (counts.get(line[1]) ?? 0) + 1);
+        list.push(parseInt(lines[i].slice(0, 5)));
+        const second = parseInt(lines[i].slice(8));
+        counts.set(second, (counts.get(second) ?? 0) + 1);
     }
 
     let sum = 0;
