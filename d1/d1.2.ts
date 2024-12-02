@@ -7,10 +7,9 @@ const text = await input.text();
 function run() {
     const start = performance.now();
 
-    const length = text.length;
     const lineLength = 15;
     const contentLength = lineLength - 2;
-    const lines = Math.round(length / lineLength);
+    const lines = Math.round(text.length / lineLength);
     const list: number[] = Array(lines);
     const counts = new Map<number, number>();
 

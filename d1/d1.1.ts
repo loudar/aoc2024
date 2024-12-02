@@ -6,21 +6,24 @@ const text = await input.text();
 
 function run() {
     const start = performance.now();
-    const lines = text.split("\r\n");
 
-    const first = [];
-    const second = [];
+    const lineLength = 15;
+    const lines = Math.round(text.length / lineLength);
+    const contentLength = lineLength - 2;
+    const first = Array(lines);
+    const second = Array(lines);
 
-    for (let i = 0; i < lines.length; i++) {
-        first.push(parseInt(lines[i].slice(0, 5)));
-        second.push(parseInt(lines[i].slice(8)));
+    for (let i = 0; i < lines; i++) {
+        const line = text.substring(i * lineLength, (i * lineLength) + contentLength);
+        first[i] = parseInt(line.slice(0, 5));
+        second[i] = parseInt(line.slice(8));
     }
 
     first.sort();
     second.sort();
 
     let sum = 0;
-    for (let i = 0; i < lines.length; i++) {
+    for (let i = 0; i < lines; i++) {
         sum += Math.abs(first[i] - second[i]);
     }
 
