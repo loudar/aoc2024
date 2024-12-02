@@ -6,19 +6,23 @@ const text = await input.text();
 
 function run() {
     const start = performance.now();
-    const lines = text.split("\r\n");
 
-    const list: number[] = Array.from([]);
+    const length = text.length;
+    const lineLength = 15;
+    const contentLength = lineLength - 2;
+    const lines = Math.round(length / lineLength);
+    const list: number[] = Array(lines);
     const counts = new Map<number, number>();
 
-    for (let i = 0; i < lines.length; i++) {
-        list.push(parseInt(lines[i].slice(0, 5)));
-        const second = parseInt(lines[i].slice(8));
+    for (let i = 0; i < lines; i++) {
+        const line = text.substring(i * lineLength, (i * lineLength) + contentLength);
+        list[i] = parseInt(line.slice(0, 5));
+        const second = parseInt(line.slice(8));
         counts.set(second, (counts.get(second) ?? 0) + 1);
     }
 
     let sum = 0;
-    for (let i = 0; i < lines.length; i++) {
+    for (let i = 0; i < lines; i++) {
         sum += list[i] * (counts.get(list[i]) ?? 0);
     }
     return {
