@@ -27,15 +27,9 @@ function run() {
             }
         }
 
-        if (match[0]) {
-            const matchString = match[0];
-            const commaIndex = matchString.indexOf(",");
-            const first = matchString.substring(4, commaIndex);
-            const second = matchString.substring(commaIndex + 1, matchString.length - 1);
-            sum += parseInt(first) * parseInt(second);
-        } else {
-            throw new Error("No match in match? Fuck???");
-        }
+        const matchString = match[0]!;
+        const commaIndex = matchString.indexOf(",");
+        sum += parseInt(matchString.substring(4, commaIndex)) * parseInt(matchString.substring(commaIndex + 1, matchString.length - 1));
     }
 
     const diff = performance.now() - start;
