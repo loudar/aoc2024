@@ -8,23 +8,27 @@ function run() {
     const start = performance.now();
     const lines = text.split("\r\n");
     const emptyLineIndex = lines.indexOf("");
-    const rules = lines.slice(0, emptyLineIndex).map(l => l.split("|").map(sn => parseInt(sn)));
+    const ruleMap = new Map<number, Map<number, boolean>>();
+    for (let i = emptyLineIndex; i < lines.length; i++) {
+        const rule = lines[i].split("|").map(sn => parseInt(sn));
+        if (!ruleMap.has(rule[0])) {
+            ruleMap.set(rule[0], new Map<number, boolean>());
+        }
+        ruleMap.get(rule[0])!.set(rule[1], true);
+    }
     const updates = lines.slice(emptyLineIndex + 1);
     let sum = 0;
 
     updates: for (const update of updates) {
         const numbers = update.split(",").map(n => parseInt(n));
-        const relevantRules = rules.filter(r => r.every(rn => numbers.includes(rn)));
 
-        for (const rule of relevantRules) {
-            const aIndex = numbers.indexOf(rule[0]);
-            const bIndex = numbers.indexOf(rule[1]);
-            if (bIndex < aIndex) {
+        for (let i = 0; i < numbers.length; i++) {
+            if (ruleMap.get(numbers[i + 1])?.has(numbers[i])) {
+                const middle = numbers[Math.floor(numbers.length / 2)];
+                sum += middle;
                 continue updates;
             }
         }
-        const middle = numbers[Math.floor(numbers.length / 2)]
-        sum += middle;
     }
 
     const diff = performance.now() - start;
