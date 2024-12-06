@@ -71,7 +71,7 @@ console.log(`Result: ${result}`);
 console.log("Measuring...");
 
 let sumTime = 0;
-const runCount = 10000;
+const runCount = 1000;
 for (let i = 0; i < runCount; i++) {
     const runTime = run().time;
     sumTime += runTime;
