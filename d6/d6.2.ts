@@ -8,6 +8,7 @@ function run() {
     const start = Bun.nanoseconds();
 
 
+
     const diff = Bun.nanoseconds() - start;
     return {
         result: 0,

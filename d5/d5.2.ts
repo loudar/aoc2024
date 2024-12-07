@@ -9,7 +9,7 @@ function run() {
     const lines = text.split("\r\n");
     const emptyLineIndex = lines.indexOf("");
     const ruleMap = new Map<number, Map<number, boolean>>();
-    for (let i = emptyLineIndex; i < lines.length; i++) {
+    for (let i = 0; i < emptyLineIndex; i++) {
         const rule = lines[i].split("|").map(sn => parseInt(sn));
         if (!ruleMap.has(rule[0])) {
             ruleMap.set(rule[0], new Map<number, boolean>());
