@@ -11,20 +11,6 @@ function outOfBounds(position: {x: number, y: number}, x: number, y: number) {
     return position.x < 0 || position.x >= x || position.y < 0 || position.y >= y;
 }
 
-function applyPositionMap(toApply: Map<number, Map<number, [boolean, number]>>, applyTarget: Map<number, Map<number, [boolean, number]>>) {
-    toApply.forEach((value, yKey) => {
-        if (!applyTarget.has(yKey)) {
-            applyTarget.set(yKey, value);
-        } else {
-            value.forEach((value, xKey) => {
-                if (!applyTarget.get(yKey)!.has(xKey)) {
-                    applyTarget.get(yKey)!.set(xKey, value);
-                }
-            });
-        }
-    });
-}
-
 function addPossibleOption(possibleOptions: Map<number, Map<number, boolean>>, targetPos: {
     x: number;
     y: number
