@@ -37,16 +37,33 @@ function addPositionAndDirectionToMap(map: Map<number, Map<number, [boolean, num
     }
 }
 
-function hasDirectionAtPosition(map: Map<number, Map<number, [boolean, number]>>, position: {x: number, y: number}, direction: number) {
+function addDirectionAtPositionToMap(map: Map<number, Map<number, number[]>>, position: {
+    x: number;
+    y: number
+}, direction: number) {
+    if (!map.has(position.y)) {
+        map.set(position.y, new Map<number, number[]>());
+    }
+    let added = false;
+    if (!map.get(position.y)!.has(position.x)) {
+        map.get(position.y)!.set(position.x, [direction]);
+        added = true;
+    } else {
+        map.get(position.y)!.get(position.x)!.push(direction);
+    }
+    return added;
+}
+
+function hasDirectionAtPosition(map: Map<number, Map<number, number[]>>, position: {x: number, y: number}, direction: number) {
     const entry = map.get(position.y)?.get(position.x);
-    return !!(entry && entry[1] === direction);
+    return entry && entry.includes(direction);
 }
 
 async function logAndWait(guard: {
     x: number;
     y: number;
     direction: number
-}, directions: string[], obstacles: Map<number, Map<number, boolean>>, visited: Map<number, Map<number, [boolean, number]>>, checkedPositions: Map<number, Map<number, [boolean, number]>>, visitedCount: number, possibleOptions: Map<number, Map<number, boolean>>, target: {
+}, directions: string[], obstacles: Map<number, Map<number, boolean>>, visited: Map<number, Map<number, number[]>>, checkedPositions: Map<number, Map<number, number[]>>, visitedCount: number, possibleOptions: Map<number, Map<number, boolean>>, target: {
     x: number;
     y: number
 }, tmpGuard: { x: number; y: number; direction: number }, lines: string[]) {
@@ -83,8 +100,8 @@ async function run() {
         obstacles.set(y, map);
     });
 
-    const visited = new Map<number, Map<number, [boolean, number]>>();
-    addPositionAndDirectionToMap(visited, guard, guard.direction);
+    const visited = new Map<number, Map<number, number[]>>();
+    addDirectionAtPositionToMap(visited, guard, guard.direction);
     const possibleOptions = new Map<number, Map<number, boolean>>();
     let visitedCount = 1, possibleOptionsCount = 0;
     let tmpGuard = structuredClone(guard);
@@ -107,7 +124,7 @@ async function run() {
         tmpGuard.direction = checkDirIndex;
         if (!obstacles.get(targetPos.y)?.has(targetPos.x)) {
             let checkI = 0;
-            const checkedPositions = new Map<number, Map<number, [boolean, number]>>();
+            const checkedPositions = new Map<number, Map<number, number[]>>();
             while (true) {
                 checkI++;
                 const target = {
@@ -149,13 +166,13 @@ async function run() {
                     break;
                 } else {
                     const checkedPos = checkedPositions.get(target.y)?.get(target.x);
-                    if (checkedPos && checkedPos[1] === tmpGuard.direction) { // for loops that occur while moving tmpGuard without ever touching original lines
+                    if (checkedPos && checkedPos.includes(tmpGuard.direction)) { // for loops that occur while moving tmpGuard without ever touching original lines
                         possibleOptionsCount = addPossibleOption(possibleOptions, targetPos, possibleOptionsCount);
                         //await logAndWait(guard, directions, obstacles, visited, checkedPositions, visitedCount, possibleOptions, target, tmpGuard, lines);
                         break;
                     }
                 }
-                addPositionAndDirectionToMap(checkedPositions, target, tmpGuard.direction);
+                addDirectionAtPositionToMap(checkedPositions, target, tmpGuard.direction);
             }
         }
 
@@ -167,17 +184,13 @@ async function run() {
 
         guard.x = targetPos.x;
         guard.y = targetPos.y;
-        if (!visited.has(guard.y)) {
-            visited.set(guard.y, new Map<number, [boolean, number]>());
-        }
-        if (!visited.get(guard.y)!.has(guard.x)) {
-            visited.get(guard.y)!.set(guard.x, [true, guard.direction]);
+        if (addDirectionAtPositionToMap(visited, guard, guard.direction)) {
             visitedCount++;
         }
         //await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, null, lines[0].length, lines.length);
     }
 
-    //fs.writeFileSync("d6out.txt", await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, null, lines[0].length, lines.length, 1000, 1000));
+    fs.writeFileSync("d6out.txt", await logPositions(guard, directions, obstacles, visited, null, visitedCount, possibleOptions, null, lines[0].length, lines.length, 1000, 1000));
 
     const diff = Bun.nanoseconds() - start;
     return {

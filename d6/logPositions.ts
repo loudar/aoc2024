@@ -6,8 +6,8 @@ export async function logPositions(
     },
     directions: any,
     obstacles: Map<number, Map<number, boolean>>,
-    visited: Map<number, Map<number, [boolean, number]>>,
-    checkedPositions: Map<number, Map<number, [boolean, number]>>,
+    visited: Map<number, Map<number, number[]>>,
+    checkedPositions: Map<number, Map<number, number[]>> | null,
     visitedCount: number,
     possibleOptions: Map<number, Map<number, boolean>>,
     highlightedPosition: { x: number, y: number, direction: number } | null,
@@ -26,9 +26,9 @@ export async function logPositions(
             } else if (obstacles.get(y)?.has(x)) {
                 out += "#";
             } else if (visited.get(y)?.has(x)) {
-                out += ".";
-            } else if (checkedPositions.get(y)?.has(x)) {
-                out += directions[checkedPositions.get(y)!.get(x)![1]];
+                out += "+";
+            } else if (checkedPositions && checkedPositions.get(y)?.has(x)) {
+                out += directions[checkedPositions.get(y)!.get(x)![0]];
             } else {
                 out += " ";
             }
