@@ -11,15 +11,20 @@ function outOfBounds(position: {x: number, y: number}, x: number, y: number) {
     return position.x < 0 || position.x >= x || position.y < 0 || position.y >= y;
 }
 
-function addPossibleOption(possibleOptions: Map<number, Map<number, boolean>>, targetPos: {
+function addPossibleOption(possibleOptions: Map<number, Map<number, boolean>>,
+                           visited: Map<number, Map<number, number[]>>, t: {
     x: number;
     y: number
 }, possibleOptionsCount: number) {
-    if (!possibleOptions.has(targetPos.y)) {
-        possibleOptions.set(targetPos.y, new Map<number, boolean>);
+    if (visited.get(t.y)?.has(t.x)) { // Don't add obstacles in places where the guard already went
+        return possibleOptionsCount;
     }
-    if (!possibleOptions.get(targetPos.y)!.has(targetPos.x)) {
-        possibleOptions.get(targetPos.y)!.set(targetPos.x, true);
+
+    if (!possibleOptions.has(t.y)) {
+        possibleOptions.set(t.y, new Map<number, boolean>);
+    }
+    if (!possibleOptions.get(t.y)!.has(t.x)) {
+        possibleOptions.get(t.y)!.set(t.x, true);
         possibleOptionsCount++;
     }
     return possibleOptionsCount;
@@ -147,27 +152,21 @@ async function run() {
                     checkDirection = directionMap[directions[tmpGuard.direction]];
                     checkI = 0;
                     if (hasDirectionAtPosition(visited, tmpGuard, tmpGuard.direction)) { // add option if after turning we're immediately on track
-                        possibleOptionsCount = addPossibleOption(possibleOptions, targetPos, possibleOptionsCount);
+                        possibleOptionsCount = addPossibleOption(possibleOptions, visited, targetPos, possibleOptionsCount);
                         //await logAndWait(guard, directions, obstacles, visited, checkedPositions, visitedCount, possibleOptions, tmpGuard, tmpGuard, lines);
                         break;
                     }
                     continue;
                 }
 
-                /*if (visitedCount > 100) {
-                    await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, {
-                        ...target,
-                        direction: tmpGuard.direction
-                    }, lines[0].length, lines.length, 15, 130, 5);
-                }*/
                 if (hasDirectionAtPosition(visited, target, tmpGuard.direction)) { // for cases where you're running into a line from before and would just continue it
-                    possibleOptionsCount = addPossibleOption(possibleOptions, targetPos, possibleOptionsCount);
+                    possibleOptionsCount = addPossibleOption(possibleOptions, visited, targetPos, possibleOptionsCount);
                     //await logAndWait(guard, directions, obstacles, visited, checkedPositions, visitedCount, possibleOptions, target, tmpGuard, lines);
                     break;
                 } else {
                     const checkedPos = checkedPositions.get(target.y)?.get(target.x);
                     if (checkedPos && checkedPos.includes(tmpGuard.direction)) { // for loops that occur while moving tmpGuard without ever touching original lines
-                        possibleOptionsCount = addPossibleOption(possibleOptions, targetPos, possibleOptionsCount);
+                        possibleOptionsCount = addPossibleOption(possibleOptions, visited, targetPos, possibleOptionsCount);
                         //await logAndWait(guard, directions, obstacles, visited, checkedPositions, visitedCount, possibleOptions, target, tmpGuard, lines);
                         break;
                     }
@@ -190,7 +189,7 @@ async function run() {
         //await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, null, lines[0].length, lines.length);
     }
 
-    fs.writeFileSync("d6out.txt", await logPositions(guard, directions, obstacles, visited, null, visitedCount, possibleOptions, null, lines[0].length, lines.length, 1000, 1000));
+    //fs.writeFileSync("d6out.txt", await logPositions(guard, directions, obstacles, visited, null, visitedCount, possibleOptions, null, lines[0].length, lines.length, 1000, 1000));
 
     const diff = Bun.nanoseconds() - start;
     return {
