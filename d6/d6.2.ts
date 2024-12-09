@@ -59,29 +59,39 @@ async function run() {
             visitedCount++;
         }
 
-        const turnRightOnceDir = guard.direction === (directions.length - 1) ? 0 : guard.direction + 1;
-        const checkDirection = directionMap[directions[turnRightOnceDir]];
-        const target = {
-            x: guard.x + checkDirection.x,
-            y: guard.y + checkDirection.y
-        };
-        if (visited.get(target.y)!.has(target.x)) {
-            if (visited.get(target.y)!.get(target.x)![1] === turnRightOnceDir) {
-                const option = {
-                    x: guard.x + direction.x,
-                    y: guard.y + direction.y,
-                };
-                if (!possibleOptions.has(option.y)) {
-                    possibleOptions.set(option.y, new Map<number, boolean>);
+        let checkDirIndex = guard.direction === (directions.length - 1) ? 0 : guard.direction + 1;
+        let checkDirection = directionMap[directions[checkDirIndex]];
+        let tmpGuard = structuredClone(guard);
+        for (let i = 0; i < Math.max(lines[0].length, lines.length); i++) {
+            const target = {
+                x: tmpGuard.x + checkDirection.x * i,
+                y: tmpGuard.y + checkDirection.y * i
+            };
+            if (obstacles.get(target.y)?.has(target.x)) {
+                checkDirIndex++;
+                if (checkDirIndex === directions.length) {
+                    checkDirIndex = 0;
                 }
-                if (!possibleOptions.get(option.y)!.has(option.x)) {
-                    possibleOptions.get(option.y)!.set(option.x, true);
-                    possibleOptionsCount++;
+                checkDirection = directionMap[directions[checkDirIndex]];
+            }
+            if (visited.get(target.y)?.has(target.x)) {
+                if (visited.get(target.y)?.get(target.x)![1] === checkDirIndex) {
+                    const option = {
+                        x: guard.x + direction.x,
+                        y: guard.y + direction.y,
+                    };
+                    if (!possibleOptions.has(option.y)) {
+                        possibleOptions.set(option.y, new Map<number, boolean>);
+                    }
+                    if (!possibleOptions.get(option.y)!.has(option.x)) {
+                        possibleOptions.get(option.y)!.set(option.x, true);
+                        possibleOptionsCount++;
+                    }
                 }
             }
         }
 
-        await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, lines[0].length, lines.length);
+        //await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, lines[0].length, lines.length);
     }
 
     const diff = Bun.nanoseconds() - start;
