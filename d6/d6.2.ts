@@ -54,7 +54,21 @@ function addPositionAndDirectionToMap(map: Map<number, Map<number, [boolean, num
 function hasDirectionAtPosition(map: Map<number, Map<number, [boolean, number]>>, position: {x: number, y: number}, direction: number) {
     const entry = map.get(position.y)?.get(position.x);
     return !!(entry && entry[1] === direction);
+}
 
+async function logAndWait(guard: {
+    x: number;
+    y: number;
+    direction: number
+}, directions: string[], obstacles: Map<number, Map<number, boolean>>, visited: Map<number, Map<number, [boolean, number]>>, checkedPositions: Map<number, Map<number, [boolean, number]>>, visitedCount: number, possibleOptions: Map<number, Map<number, boolean>>, target: {
+    x: number;
+    y: number
+}, tmpGuard: { x: number; y: number; direction: number }, lines: string[]) {
+    await logPositions(guard, directions, obstacles, visited, checkedPositions, visitedCount, possibleOptions, {
+        ...target,
+        direction: tmpGuard.direction
+    }, lines[0].length, lines.length, lines.length, lines[0].length);
+    await new Promise(resolve => process.stdin.once("data", resolve));
 }
 
 async function run() {
@@ -89,7 +103,7 @@ async function run() {
     let visitedCount = 1, possibleOptionsCount = 0;
     let tmpGuard = structuredClone(guard);
 
-    while (guard.x > -1 && guard.x < lines[0].length && guard.y > -1 && guard.y < lines.length) {
+    while (!outOfBounds(guard, lines[0].length, lines.length)) {
         const direction = directionMap[directions[guard.direction]];
         const targetPos = {
             x: guard.x + direction.x,
@@ -117,28 +131,35 @@ async function run() {
                 if (outOfBounds(target, lines[0].length, lines.length)) {
                     break;
                 }
-                if (obstacles.get(target.y)?.has(target.x)) {
+                if (obstacles.get(target.y)?.has(target.x)) { // we've hit an obstacle, turn tmpGuard right and modify direction
                     tmpGuard.x = target.x - checkDirection.x;
                     tmpGuard.y = target.y - checkDirection.y;
                     tmpGuard.direction = directions[tmpGuard.direction + 1] ? tmpGuard.direction + 1 : 0;
                     checkDirection = directionMap[directions[tmpGuard.direction]];
                     checkI = 0;
+                    if (hasDirectionAtPosition(visited, tmpGuard, tmpGuard.direction)) { // add option if after turning we're immediately on track
+                        possibleOptionsCount = addPossibleOption(possibleOptions, targetPos, possibleOptionsCount);
+                        //await logAndWait(guard, directions, obstacles, visited, checkedPositions, visitedCount, possibleOptions, tmpGuard, tmpGuard, lines);
+                        break;
+                    }
                     continue;
                 }
 
-                /*if (resetCount > 1000) {
+                /*if (visitedCount > 100) {
                     await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, {
                         ...target,
                         direction: tmpGuard.direction
                     }, lines[0].length, lines.length, 15, 130, 5);
                 }*/
-                if (visited.get(target.y)?.has(target.x) && visited.get(target.y)?.get(target.x)![1] === tmpGuard.direction) {
+                if (hasDirectionAtPosition(visited, target, tmpGuard.direction)) { // for cases where you're running into a line from before and would just continue it
                     possibleOptionsCount = addPossibleOption(possibleOptions, targetPos, possibleOptionsCount);
+                    //await logAndWait(guard, directions, obstacles, visited, checkedPositions, visitedCount, possibleOptions, target, tmpGuard, lines);
                     break;
                 } else {
                     const checkedPos = checkedPositions.get(target.y)?.get(target.x);
-                    if (checkedPos && checkedPos[1] === tmpGuard.direction) {
+                    if (checkedPos && checkedPos[1] === tmpGuard.direction) { // for loops that occur while moving tmpGuard without ever touching original lines
                         possibleOptionsCount = addPossibleOption(possibleOptions, targetPos, possibleOptionsCount);
+                        //await logAndWait(guard, directions, obstacles, visited, checkedPositions, visitedCount, possibleOptions, target, tmpGuard, lines);
                         break;
                     }
                 }
@@ -164,7 +185,7 @@ async function run() {
         //await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, null, lines[0].length, lines.length);
     }
 
-    //fs.writeFileSync("d6out.txt", await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, null, lines[0].length, lines.length, 15, 130));
+    //fs.writeFileSync("d6out.txt", await logPositions(guard, directions, obstacles, visited, visitedCount, possibleOptions, null, lines[0].length, lines.length, 1000, 1000));
 
     const diff = Bun.nanoseconds() - start;
     return {
