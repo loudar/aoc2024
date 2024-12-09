@@ -117,6 +117,12 @@ async function run() {
                 if (outOfBounds(target, lines[0].length, lines.length)) {
                     break;
                 }
+
+                if (possibleOptions.get(targetPos.y)?.has(targetPos.x)) {
+                    //console.log(`already had ${targetPos.y} | ${targetPos.x}`);
+                    break;
+                }
+
                 if (obstacles.get(target.y)?.has(target.x)) { // we've hit an obstacle, turn tmpGuard right and modify direction
                     tmpGuard.x = target.x - checkDirection.x;
                     tmpGuard.y = target.y - checkDirection.y;
