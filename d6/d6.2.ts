@@ -68,6 +68,8 @@ async function run() {
                 y: tmpGuard.y + checkDirection.y * i
             };
             if (obstacles.get(target.y)?.has(target.x)) {
+                tmpGuard.x = target.x - checkDirection.x;
+                tmpGuard.y = target.y - checkDirection.y;
                 checkDirIndex++;
                 if (checkDirIndex === directions.length) {
                     checkDirIndex = 0;
